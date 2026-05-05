@@ -1,23 +1,20 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
-from sentence_transformers import SentenceTransformer
+import hashlib
 
 app = FastAPI()
-
-# Load model once
-model = SentenceTransformer('all-MiniLM-L6-v2')
 
 class TextRequest(BaseModel):
     text: str
 
+def get_embedding(text):
+    hash_obj = hashlib.sha256(text.encode())
+    return [b / 255.0 for b in hash_obj.digest()]
+
+@app.post("/embedding")
+def embedding(req: TextRequest):
+    return get_embedding(req.text)
 
 @app.get("/")
 def home():
-    return {"message": "Welcome to Embedding API 🚀"}
-
-@app.post("/embedding")
-def get_embedding(request: TextRequest):
-    embedding = model.encode(request.text)
-    
-    # ONLY return embedding
-    return embedding.tolist()
+    return {"message": "API is running 🚀"}
